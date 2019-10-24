@@ -93,6 +93,8 @@ RUN apt-get update -q && apt-get upgrade -yq && apt-get install -y \
       # general RT tools
       supervisor \
       openssh-client \
+      # required by wait-for
+      netcat \
       # libyang
       libpcre3 \
       # sysrepo
@@ -107,6 +109,9 @@ RUN apt-get update -q && apt-get upgrade -yq && apt-get install -y \
       && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /usr/local/ /usr/local/
+
+COPY config/ /config
+VOLUME /config
 
 # finish setup and add netconf user
 RUN \
@@ -123,8 +128,11 @@ RUN \
 
 EXPOSE 830
 
-RUN mkdir /etc/supervisord.d
-VOLUME /etc/supervisord.d
 COPY supervisord.conf /etc/supervisord.conf
+RUN mkdir /etc/supervisord.d
 
-ENTRYPOINT /usr/bin/supervisord
+COPY docker-entrypoint.sh /usr/local/bin/
+COPY setup.sh /usr/local/bin/
+COPY wait-for /usr/local/bin/
+
+CMD /usr/local/bin/docker-entrypoint.sh
