@@ -4,6 +4,9 @@ set -eux
 
 MODELS_CONFIG=/config/models
 
+# create include script for common definitions between pre- and post-setup
+# function to infer SV program ID from model
+
 config_subscribers() {
   for dir in $MODELS_CONFIG/*; do
     if [ -d $dir ]; then

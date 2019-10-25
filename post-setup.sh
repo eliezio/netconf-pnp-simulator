@@ -40,8 +40,9 @@ configure_yang_models()
   for dir in $MODELS_CONFIG/*; do
     if [ -d $dir ]; then
       model=${dir##*/}
+      # install the Yang model
       sysrepoctl --install --yang=$dir/model.yang
-      echo subscribing to $model model
+      # activate the subscrer
       supervisorctl start subs-$model
       wait_for_subscription $model 10
       if [ -f $dir/data.json ]; then
