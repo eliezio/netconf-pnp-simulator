@@ -48,6 +48,9 @@ configure_yang_models()
       if [ -f $dir/data.json ]; then
         echo creating data for $model model
         sysrepocfg --datastore=running --format=json $model --import=$dir/data.json
+      elif [ -f $dir/data.xml ]; then
+        echo creating data for $model model
+        sysrepocfg --datastore=running --format=xml $model --import=$dir/data.xml
       fi
     fi
   done
