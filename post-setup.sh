@@ -6,6 +6,7 @@ CONFIG=/config
 
 TLS_CONFIG=$CONFIG/tls
 KEY_PATH=/usr/local/etc/keystored/keys
+SR_SUBSCRIPTIONS_SOCKET_DIR=/var/run/sysrepo-subscriptions
 
 # This function configures server/trusted certificates into Netopeer
 configure_tls()
@@ -20,39 +21,24 @@ configure_tls()
 
 MODELS_CONFIG=$CONFIG/models
 
-wait_for_subscription() {
-  local model=$1
-  local secs=$2
-  local i=0
-  while [ $i -le $secs ]; do
-    if [ -S /var/run/sysrepo-subscriptions/$model/*.sock ]; then
-      return 0
-    fi
-    sleep 1
-    i=$(($i+1))
-  done
-  return 1
-}
-
 # This function uploads all models under $CONFIG/yang-models
 configure_yang_models()
 {
   for dir in $MODELS_CONFIG/*; do
     if [ -d $dir ]; then
       model=${dir##*/}
-      rm -vf /var/run/sysrepo-subscriptions/$model/*.sock
+      rm -vf $SR_SUBSCRIPTIONS_SOCKET_DIR/$model/*.sock
       # install the Yang model
       sysrepoctl --install --yang=$dir/model.yang
+      if [ -f $dir/data.json ]; then
+        echo initializing data for $model model
+        sysrepocfg --datastore=startup --format=json $model --import=$dir/data.json
+      elif [ -f $dir/data.xml ]; then
+        echo initializing data for $model model
+        sysrepocfg --datastore=startup --format=xml $model --import=$dir/data.xml
+      fi
       # activate the subscriber
       supervisorctl start subs-$model
-      wait_for_subscription $model 10
-      if [ -f $dir/data.json ]; then
-        echo creating data for $model model
-        sysrepocfg --datastore=running --format=json $model --import=$dir/data.json
-      elif [ -f $dir/data.xml ]; then
-        echo creating data for $model model
-        sysrepocfg --datastore=running --format=xml $model --import=$dir/data.xml
-      fi
     fi
   done
 }
