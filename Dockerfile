@@ -106,6 +106,8 @@ RUN apt-get update -q && apt-get upgrade -yq && apt-get install -y \
       libssl1.1 \
       # bindings
       libpython2.7 \
+      # Python 2.x Libs
+      python-concurrent.futures \
       && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /usr/local/ /usr/local/
