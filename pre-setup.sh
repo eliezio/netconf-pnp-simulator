@@ -17,6 +17,7 @@ config_subscribers() {
 command=$dir/subscriber $model
 redirect_stderr=true
 autostart=false
+autorestart=true
 environment=PYTHONUNBUFFERED="1"
 EOF
       fi
