@@ -21,6 +21,17 @@ configure_tls()
 
 MODELS_CONFIG=$CONFIG/models
 
+find_file() {
+  dir=$1
+  shift
+  for prog in $*; do
+    if [ -f $dir/$prog ]; then
+      echo -n $dir/$prog
+    fi
+  done
+  echo -n ""
+}
+
 # This function uploads all models under $CONFIG/yang-models
 configure_yang_models()
 {
@@ -29,18 +40,12 @@ configure_yang_models()
       model=${dir##*/}
       rm -vf $SR_SUBSCRIPTIONS_SOCKET_DIR/$model/*.sock
       # install the Yang model
-      if [ -f $dir/$model.yang ]; then
-        yang=$dir/$model.yang
-      else
-        yang=$dir/model.yang
-      fi
+      yang=$(find_file $dir $model.yang model.yang)
       sysrepoctl --install --yang=$yang
-      if [ -f $dir/data.json ]; then
-        echo initializing data for $model model
-        sysrepocfg --datastore=startup --format=json $model --import=$dir/data.json
-      elif [ -f $dir/data.xml ]; then
-        echo initializing data for $model model
-        sysrepocfg --datastore=startup --format=xml $model --import=$dir/data.xml
+      data=$(find_file $dir startup.json startup.xml data.json data.xml)
+      if [ -n "$data" ]; then
+        echo importing $data into startup datastore
+        sysrepocfg --datastore=startup --format=${data##*.} $model --import=$data
       fi
       # activate the subscriber
       supervisorctl start subs-$model
