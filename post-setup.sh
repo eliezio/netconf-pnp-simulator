@@ -29,7 +29,12 @@ configure_yang_models()
       model=${dir##*/}
       rm -vf $SR_SUBSCRIPTIONS_SOCKET_DIR/$model/*.sock
       # install the Yang model
-      sysrepoctl --install --yang=$dir/model.yang
+      if [ -f $dir/$model.yang ]; then
+        yang=$dir/$model.yang
+      else
+        yang=$dir/model.yang
+      fi
+      sysrepoctl --install --yang=$yang
       if [ -f $dir/data.json ]; then
         echo initializing data for $model model
         sysrepocfg --datastore=startup --format=json $model --import=$dir/data.json
