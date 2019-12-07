@@ -1,7 +1,7 @@
 FROM ubuntu:18.04 as build
 
-ARG libyang_version=v1.0-r4
-ARG sysrepo_version=v0.7.8
+ARG libyang_version=v1.0-r5
+ARG sysrepo_version=v0.7.9
 ARG libnetconf2_version=v0.12-r2
 ARG netopeer2_version=v0.7-r2
 
