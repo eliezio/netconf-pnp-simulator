@@ -133,6 +133,6 @@ EXPOSE 830
 COPY supervisord.conf /etc/supervisord.conf
 RUN mkdir /etc/supervisord.d
 
-COPY pre-setup.sh post-setup.sh wait-for /usr/local/bin/
+COPY pre-setup.sh setup.sh wait-for /usr/local/bin/
 
 CMD /usr/local/bin/pre-setup.sh

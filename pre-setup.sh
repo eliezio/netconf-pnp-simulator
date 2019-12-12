@@ -4,7 +4,7 @@ set -eux
 
 MODELS_CONFIG=/config/models
 
-# create include script for common definitions between pre- and post-setup
+# create include script for common definitions between pre- and setup
 # function to infer SV program ID from model
 
 find_executable() {
