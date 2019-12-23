@@ -92,7 +92,6 @@ LABEL authors="mislav.novakovic@sartura.hr, eliezio.oliveira@est.tech"
 
 RUN apt-get update -q && apt-get upgrade -yq && apt-get install -y \
       # general RT tools
-      supervisor \
       openssh-client \
       # required by wait-for
       netcat \
@@ -114,7 +113,8 @@ COPY --from=build /usr/local/ /usr/local/
 COPY config/ /config
 VOLUME /config
 
-RUN pip3 install --upgrade pip
+RUN pip3 install --upgrade pip \
+    && pip3 install supervisor
 
 # finish setup and add netconf user
 RUN \

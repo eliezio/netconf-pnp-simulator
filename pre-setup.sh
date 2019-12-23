@@ -51,4 +51,4 @@ EOF
 
 config_subscribers
 
-exec /usr/bin/supervisord -c /etc/supervisord.conf
+exec /usr/local/bin/supervisord -c /etc/supervisord.conf
