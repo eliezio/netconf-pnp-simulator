@@ -29,7 +29,7 @@ config_subscribers() {
         if [ -r "$dir/requirements.txt" ]; then
           mkdir -p $BASE_VIRTUALENVS
           env_dir=$BASE_VIRTUALENVS/$model
-          virtualenv --system-site-packages $env_dir
+          python3 -m venv --system-site-packages $env_dir
           cd $env_dir
           . ./bin/activate
           pip install -r "$dir"/requirements.txt

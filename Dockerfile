@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 as build
+FROM python:3.7.6-slim-buster as build
 
 ARG libyang_version=v1.0-r5
 ARG sysrepo_version=v0.7.9
@@ -24,7 +24,7 @@ RUN \
       libssl-dev \
       # bindings
       swig \
-      python-dev
+      python3-dev
 
 # use /opt/dev as working directory
 RUN mkdir /opt/dev
@@ -49,7 +49,8 @@ RUN \
       cd sysrepo && for p in ../patches/sysrepo/*.patch; do patch -p1 -i $p; done && \
       mkdir build && cd build && \
       cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_TESTS=OFF -DREPOSITORY_LOC:PATH=/usr/local/etc/sysrepo \
-      -DPYTHON_MODULE_PATH:PATH=/usr/local/lib/python2.7/dist-packages .. && \
+      -DGEN_PYTHON_VERSION=3 \
+      -DPYTHON_MODULE_PATH:PATH=/usr/local/lib/python3.7/site-packages .. && \
       make -j2 && \
       make install && \
       ldconfig
@@ -86,7 +87,7 @@ RUN \
       make -j2 && \
       make install
 
-FROM ubuntu:18.04
+FROM python:3.7.6-slim-buster
 LABEL authors="mislav.novakovic@sartura.hr, eliezio.oliveira@est.tech"
 
 RUN apt-get update -q && apt-get upgrade -yq && apt-get install -y \
@@ -105,19 +106,15 @@ RUN apt-get update -q && apt-get upgrade -yq && apt-get install -y \
       libssh-4 \
       libssl1.1 \
       # bindings
-      libpython2.7 \
-      # Python 2.x Libs
-      python-concurrent.futures \
+      libpython3.7 \
       && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /usr/local/ /usr/local/
 
-ADD https://bootstrap.pypa.io/get-pip.py /tmp/
-RUN python /tmp/get-pip.py \
-    && pip install virtualenv
-
 COPY config/ /config
 VOLUME /config
+
+RUN pip3 install --upgrade pip
 
 # finish setup and add netconf user
 RUN \
