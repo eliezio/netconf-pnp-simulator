@@ -3,6 +3,7 @@
 set -eux
 
 MODELS_CONFIG=/config/models
+BASE_VIRTUALENVS=$HOME/.local/share/virtualenvs
 
 # create include script for common definitions between pre- and setup
 # function to infer SV program ID from model
@@ -24,13 +25,24 @@ config_subscribers() {
       model=${dir##*/}
       prog=$(find_executable $dir subscriber subscriber.py)
       if [ -n "$prog" ]; then
+        PROG_PATH="/usr/local/bin:/usr/bin:/bin"
+        if [ -r "$dir/requirements.txt" ]; then
+          mkdir -p $BASE_VIRTUALENVS
+          env_dir=$BASE_VIRTUALENVS/$model
+          virtualenv --system-site-packages $env_dir
+          cd $env_dir
+          . ./bin/activate
+          pip install -r "$dir"/requirements.txt
+          deactivate
+          PROG_PATH=$env_dir/bin:$PROG_PATH
+        fi
         cat > /etc/supervisord.d/$model.conf <<EOF
 [program:subs-$model]
 command=$prog $model
 redirect_stderr=true
 autostart=false
 autorestart=true
-environment=PYTHONUNBUFFERED="1"
+environment=PATH=$PROG_PATH,PYTHONUNBUFFERED="1"
 EOF
       fi
     fi

@@ -112,6 +112,10 @@ RUN apt-get update -q && apt-get upgrade -yq && apt-get install -y \
 
 COPY --from=build /usr/local/ /usr/local/
 
+ADD https://bootstrap.pypa.io/get-pip.py /tmp/
+RUN python /tmp/get-pip.py \
+    && pip install virtualenv
+
 COPY config/ /config
 VOLUME /config
 
@@ -121,6 +125,7 @@ RUN \
       && adduser --system --disabled-password --gecos 'Netconf User' netconf
 
 ENV HOME=/home/netconf
+VOLUME $HOME/.local/share/virtualenvs
 
 # generate ssh keys for netconf user
 RUN \
