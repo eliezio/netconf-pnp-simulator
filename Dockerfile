@@ -93,8 +93,6 @@ LABEL authors="mislav.novakovic@sartura.hr, eliezio.oliveira@est.tech"
 RUN apt-get update -q && apt-get upgrade -yq && apt-get install -y \
       # general RT tools
       openssh-client \
-      # required by wait-for
-      netcat \
       # libyang
       libpcre3 \
       # sysrepo
@@ -135,6 +133,6 @@ EXPOSE 830
 COPY supervisord.conf /etc/supervisord.conf
 RUN mkdir /etc/supervisord.d
 
-COPY pre-setup.sh setup.sh wait-for /usr/local/bin/
+COPY entrypoint.sh /usr/local/bin/
 
-CMD /usr/local/bin/pre-setup.sh
+CMD /usr/local/bin/entrypoint.sh
