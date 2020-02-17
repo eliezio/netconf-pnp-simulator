@@ -101,7 +101,7 @@ LABEL authors="eliezio.oliveira@est.tech"
 COPY bindep.txt .
 RUN set -eux \
       && pip install --upgrade pip \
-      && pip install bindep \
+      && pip install supervisor bindep \
       && apt-get update -yq \
       && apt-get install -yq $(bindep -b setup runtime) \
       && rm -rf /var/lib/apt/lists/*
@@ -112,10 +112,6 @@ RUN echo /opt/lib > /etc/ld.so.conf.d/opt.conf \
 
 COPY config/ /config
 VOLUME /config
-
-RUN set -eux \
-      && pip3 install --upgrade pip \
-      && pip3 install supervisor
 
 # finish setup and add netconf user
 RUN \
