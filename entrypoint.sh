@@ -6,10 +6,12 @@ set -o nounset
 set -o pipefail
 set -o xtrace
 
+export PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin
+
 CONFIG=/config
 TLS_CONFIG=$CONFIG/tls
 MODELS_CONFIG=$CONFIG/models
-KEY_PATH=/usr/local/etc/keystored/keys
+KEY_PATH=/opt/etc/keystored/keys
 BASE_VIRTUALENVS=$HOME/.local/share/virtualenvs
 
 find_file() {
@@ -77,7 +79,7 @@ configure_subscriber_execution()
   local model=$2
   local prog=$3
 
-  PROG_PATH="/usr/local/bin:/usr/bin:/bin"
+  PROG_PATH=$PATH
   if [ -r "$dir/requirements.txt" ]; then
     mkdir -p $BASE_VIRTUALENVS
     env_dir=$BASE_VIRTUALENVS/$model
@@ -93,7 +95,7 @@ configure_subscriber_execution()
 command=$prog $model
 redirect_stderr=true
 autorestart=true
-environment=PATH=$PROG_PATH,PYTHONUNBUFFERED="1"
+environment=PATH=$PROG_PATH,PYTHONPATH=/opt/lib/python3.7/site-packages,PYTHONUNBUFFERED="1"
 EOF
 }
 
