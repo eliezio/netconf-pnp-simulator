@@ -70,7 +70,7 @@ configure_modules()
     if [ -d $dir ]; then
       model=${dir##*/}
       install_and_configure_yang_model $dir $model
-      prog=$(find_executable $dir subscriber subscriber.py)
+      prog=$(find_executable $dir subscriber.py)
       if [ -n "$prog" ]; then
         configure_subscriber_execution $dir $model $prog
       fi
