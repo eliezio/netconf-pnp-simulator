@@ -43,9 +43,13 @@ RUN echo /opt/lib > /etc/ld.so.conf.d/opt.conf
 # libyang
 RUN set -eux \
       && git clone --branch $libyang_version --depth 1 https://github.com/CESNET/libyang.git \
-      && cd libyang && mkdir build && cd build \
+      && cd libyang \
+      && for p in ../patches/libyang/*.patch; do patch -p1 -i $p; done \
+      && mkdir build && cd build \
       && cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_BUILD_TESTS=OFF \
          -DCMAKE_INSTALL_PREFIX:PATH=/opt \
+         -DGEN_LANGUAGE_BINDINGS=ON \
+         -DPYTHON_MODULE_PATH:PATH=/opt/lib/python3.7/site-packages \
          .. \
       && make -j2 \
       && make install \
@@ -54,12 +58,15 @@ RUN set -eux \
 # sysrepo
 RUN set -eux \
       && git clone --branch $sysrepo_version --depth 1 https://github.com/sysrepo/sysrepo.git \
-      && cd sysrepo && for p in ../patches/sysrepo/*.patch; do patch -p1 -i $p; done \
+      && cd sysrepo \
+      && for p in ../patches/sysrepo/*.patch; do patch -p1 -i $p; done \
       && mkdir build && cd build \
-      && cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_TESTS=OFF -DREPOSITORY_LOC:PATH=/opt/etc/sysrepo \
+      && cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_TESTS=OFF \
+         -DREPOSITORY_LOC:PATH=/opt/etc/sysrepo \
          -DCMAKE_INSTALL_PREFIX:PATH=/opt \
+         -DGEN_PYTHON_VERSION=3 \
          -DPYTHON_MODULE_PATH:PATH=/opt/lib/python3.7/site-packages \
-         -DGEN_PYTHON_VERSION=3 .. \
+         .. \
       && make -j2 \
       && make install \
       && ldconfig
@@ -67,18 +74,23 @@ RUN set -eux \
 # libnetconf2
 RUN set -eux \
       && git clone --branch $libnetconf2_version --depth 1 https://github.com/CESNET/libnetconf2.git \
-      && cd libnetconf2 && mkdir build && cd build \
+      && cd libnetconf2 \
+      && for p in ../patches/libnetconf2/*.patch; do patch -p1 -i $p; done \
+      && mkdir build && cd build \
       && cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_BUILD_TESTS=OFF \
          -DCMAKE_INSTALL_PREFIX:PATH=/opt \
+         -DENABLE_PYTHON=ON \
+         -DPYTHON_MODULE_PATH:PATH=/opt/lib/python3.7/site-packages \
          .. \
-      && make -j2 \
+      && make \
       && make install \
       && ldconfig
 
 # keystore
 RUN set -eux \
       && git clone --branch $netopeer2_version --depth 1 https://github.com/CESNET/Netopeer2.git \
-      && cd Netopeer2/keystored && mkdir build && cd build \
+      && cd Netopeer2/keystored \
+      && mkdir build && cd build \
       && cmake -DCMAKE_BUILD_TYPE:String="Release" \
          -DCMAKE_INSTALL_PREFIX:PATH=/opt \
          .. \
@@ -88,7 +100,8 @@ RUN set -eux \
 
 # netopeer2
 RUN set -eux \
-      && cd Netopeer2/server && mkdir build && cd build \
+      && cd Netopeer2/server \
+      && mkdir build && cd build \
       && cmake -DCMAKE_BUILD_TYPE:String="Release" \
          -DCMAKE_INSTALL_PREFIX:PATH=/opt \
          .. \
