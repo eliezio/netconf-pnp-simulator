@@ -28,8 +28,6 @@ WORKDIR /usr/src
 COPY bindep.txt .
 RUN set -eux \
       && apt-get update -yq \
-      && sec_updates=$(apt-get -s dist-upgrade | grep -oP "^Inst\s+\K([\w-]+)(?=.*Debian-Security.*)") \
-      && [ -z "$sec_updates" ] || apt-get install -yq $sec_updates \
       && pip install --upgrade pip \
       && pip install bindep \
       && apt-get install -yq $(bindep -b compile)
@@ -115,9 +113,12 @@ LABEL authors="eliezio.oliveira@est.tech"
 
 COPY bindep.txt .
 RUN set -eux \
+      && apt-get update -yq \
+      && dpkg -P e2fsprogs \
+      && sec_updates=$(apt-get -s dist-upgrade | grep -oP "^Inst\s+\K([\w-]+)(?=.*Debian-Security.*)") \
+      && [ -z "$sec_updates" ] || apt-get install -yq $sec_updates \
       && pip install --upgrade pip \
       && pip install supervisor bindep \
-      && apt-get update -yq \
       && apt-get install -yq $(bindep -b setup runtime) \
       && rm -rf /var/lib/apt/lists/*
 
