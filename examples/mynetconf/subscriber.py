@@ -33,13 +33,13 @@ import sys
 # Helper function for printing changes given operation, old and new value.
 def print_change(op, old_val, new_val):
     if op == sr.SR_OP_CREATED:
-        print("CREATED: %s" % new_val.to_string())
+        print(f"CREATED: {new_val.to_string()}")
     elif op == sr.SR_OP_DELETED:
-        print("DELETED: %s" % old_val.to_string())
+        print(f"DELETED: {old_val.to_string()}")
     elif op == sr.SR_OP_MODIFIED:
-        print("MODIFIED: %s to %s" % (old_val.to_string(), new_val.to_string()))
+        print(f"MODIFIED: {old_val.to_string()} to {new_val.to_string()}")
     elif op == sr.SR_OP_MOVED:
-        print("MOVED: %s after %s" % (new_val.xpath(), old_val.xpath()))
+        print(f"MOVED: {new_val.xpath()} after {old_val.xpath()}")
 
 
 # Helper function for printing events.
@@ -57,7 +57,7 @@ def ev_to_str(ev):
 # Function to print current configuration state.
 # It does so by loading all the items of a session and printing them out.
 def print_current_config(session, module_name):
-    select_xpath = "/" + module_name + ":*//*"
+    select_xpath = f"/{module_name}:*//*"
 
     values = session.get_items(select_xpath)
 
@@ -77,7 +77,7 @@ def module_change_cb(sess, module_name, event, private_ctx):
 
         print("========== CHANGES: =============================================")
 
-        change_path = "/" + module_name + ":*"
+        change_path = f"/{module_name}:*"
 
         it = sess.get_changes_iter(change_path)
 
@@ -104,7 +104,7 @@ def main():
         else:
             print("\nYou can pass the module name to be subscribed as the first argument")
 
-        print("Application will watch for changes in " + module_name)
+        print(f"Application will watch for changes in {module_name}")
 
         # connect to sysrepo
         conn = sr.Connection(module_name)
