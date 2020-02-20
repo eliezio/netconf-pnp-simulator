@@ -27,9 +27,11 @@ WORKDIR /usr/src
 
 COPY bindep.txt .
 RUN set -eux \
+      && apt-get update -yq \
+      && sec_updates=$(apt-get -s dist-upgrade | grep -oP "^Inst\s+\K([\w-]+)(?=.*Debian-Security.*)") \
+      && [ -z "$sec_updates" ] || apt-get install -yq $sec_updates \
       && pip install --upgrade pip \
       && pip install bindep \
-      && apt-get update -yq \
       && apt-get install -yq $(bindep -b compile)
 
 RUN git config --global advice.detachedHead false
