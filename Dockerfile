@@ -139,6 +139,7 @@ VOLUME $HOME/.local/share/virtualenvs
 
 # generate ssh keys for netconf user
 RUN set -eux \
+      && mkdir -p $HOME/.cache \
       && mkdir -p $HOME/.ssh \
       && ssh-keygen -t dsa -P '' -f $HOME/.ssh/id_dsa \
       && cat $HOME/.ssh/id_dsa.pub > $HOME/.ssh/authorized_keys
