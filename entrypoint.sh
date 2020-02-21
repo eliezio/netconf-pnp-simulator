@@ -99,13 +99,7 @@ configure_subscriber_execution()
 
   PROG_PATH=$PATH
   if [ -r "$dir/requirements.txt" ]; then
-    mkdir -p $BASE_VIRTUALENVS
-    env_dir=$BASE_VIRTUALENVS/$model
-    python3 -m venv --system-site-packages $env_dir
-    cd $env_dir
-    . ./bin/activate
-    pip install -r "$dir"/requirements.txt
-    deactivate
+    env_dir=$(create_python_venv $dir)
     PROG_PATH=$env_dir/bin:$PROG_PATH
   fi
   cat > /etc/supervisord.d/$model.conf <<EOF
@@ -115,6 +109,22 @@ redirect_stderr=true
 autorestart=true
 environment=PATH=$PROG_PATH,PYTHONPATH=/opt/lib/python3.7/site-packages,PYTHONUNBUFFERED="1"
 EOF
+}
+
+create_python_venv()
+{
+  local dir=$1
+
+  mkdir -p $BASE_VIRTUALENVS
+  env_dir=$BASE_VIRTUALENVS/$model
+  (
+    python3 -m venv --system-site-packages $env_dir
+    cd $env_dir
+    . ./bin/activate
+    pip install --upgrade pip
+    pip install -r "$dir"/requirements.txt
+  ) 1>&2
+  echo $env_dir
 }
 
 configure_tls
