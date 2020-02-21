@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # shellcheck disable=SC2086
 
 # ============LICENSE_START=======================================================
@@ -33,7 +33,7 @@ KEY_PATH=/opt/etc/keystored/keys
 BASE_VIRTUALENVS=$HOME/.local/share/virtualenvs
 
 find_file() {
-  dir=$1
+  local dir=$1
   shift
   for prog in "$@"; do
     if [ -f $dir/$prog ]; then
@@ -41,11 +41,10 @@ find_file() {
       break
     fi
   done
-  echo -n ""
 }
 
 find_executable() {
-  dir=$1
+  local dir=$1
   shift
   for prog in "$@"; do
     if [ -x $dir/$prog ]; then
@@ -53,7 +52,6 @@ find_executable() {
       break
     fi
   done
-  echo -n ""
 }
 
 configure_tls()
