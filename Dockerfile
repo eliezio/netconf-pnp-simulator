@@ -30,12 +30,15 @@ RUN set -eux \
       && apt-get update -yq \
       && pip install --upgrade pip \
       && pip install bindep \
-      && apt-get install -yq $(bindep -b compile)
+      && pkgs=$(bindep -b compile:dpkg) \
+      && [ -z "$pkgs" ] || apt-get install -yq $pkgs
 
 RUN git config --global advice.detachedHead false
 
 COPY patches/ ./patches/
 
+ENV CC=gcc
+ENV CXX=g++
 ENV PKG_CONFIG_PATH=/opt/lib/pkgconfig
 RUN echo /opt/lib > /etc/ld.so.conf.d/opt.conf
 
@@ -53,7 +56,7 @@ RUN set -eux \
          .. \
       && make -j2 \
       && make install \
-      && ldconfig
+      && ldconfig /
 
 # sysrepo
 RUN set -eux \
@@ -69,7 +72,7 @@ RUN set -eux \
          .. \
       && make -j2 \
       && make install \
-      && ldconfig
+      && ldconfig /
 
 # libnetconf2
 RUN set -eux \
@@ -84,7 +87,7 @@ RUN set -eux \
          .. \
       && make \
       && make install \
-      && ldconfig
+      && ldconfig /
 
 # keystore
 RUN set -eux \
@@ -96,7 +99,7 @@ RUN set -eux \
          .. \
       && make -j2 \
       && make install \
-      && ldconfig
+      && ldconfig /
 
 # netopeer2
 RUN set -eux \
@@ -119,19 +122,20 @@ RUN set -eux \
       && [ -z "$sec_updates" ] || apt-get install -yq $sec_updates \
       && pip install --upgrade pip \
       && pip install supervisor bindep \
-      && apt-get install -yq $(bindep -b setup runtime) \
+      && pkgs=$(bindep -b setup:dpkg runtime:dpkg) \
+      && [ -z "$pkgs" ] || apt-get install -yq $pkgs \
       && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /opt/ /opt/
 RUN echo /opt/lib > /etc/ld.so.conf.d/opt.conf \
-      && ldconfig
+      && ldconfig /
 
 COPY config/ /config
 VOLUME /config
 
 # finish setup and add netconf user
 RUN \
-      ldconfig \
+      ldconfig / \
       && adduser --system --disabled-password --gecos 'Netconf User' netconf
 
 ENV HOME=/home/netconf
