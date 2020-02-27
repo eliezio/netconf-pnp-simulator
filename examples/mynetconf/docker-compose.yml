@@ -9,4 +9,4 @@ services:
       - "830:830"
       - "6513:6513"
     volumes:
-      - ./:/config/models/mynetconf
+      - ./:/config/modules/mynetconf

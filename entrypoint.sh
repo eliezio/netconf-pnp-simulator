@@ -28,7 +28,7 @@ export PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin
 
 CONFIG=/config
 TLS_CONFIG=$CONFIG/tls
-MODELS_CONFIG=$CONFIG/models
+MODELS_CONFIG=$CONFIG/modules
 KEY_PATH=/opt/etc/keystored/keys
 BASE_VIRTUALENVS=$HOME/.local/share/virtualenvs
 
