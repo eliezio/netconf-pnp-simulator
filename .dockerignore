@@ -3,3 +3,7 @@ LICENSE
 
 examples/
 images/
+.tox/
+.attic/
+images/
+tests/
