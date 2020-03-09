@@ -150,6 +150,7 @@ RUN set -eux \
 COPY --from=build /opt/ /opt/
 
 ENV LD_LIBRARY_PATH=/opt/lib:/opt/lib64
+ENV PYTHONPATH=/opt/lib/python3.7/site-packages
 
 COPY config/ /config
 VOLUME /config
