@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/ash
 # shellcheck disable=SC2086
 
 # ============LICENSE_START=======================================================
@@ -30,26 +30,16 @@ CONFIG=/config
 SSH_CONFIG=$CONFIG/ssh
 TLS_CONFIG=$CONFIG/tls
 MODELS_CONFIG=$CONFIG/modules
+TEMPLATES=/templates
 KEY_PATH=/opt/etc/keystored/keys
 BASE_VIRTUALENVS=$HOME/.local/share/virtualenvs
 
 find_file() {
   local dir=$1
   shift
-  for prog in "$@"; do
-    if [ -f $dir/$prog ]; then
-      echo -n $dir/$prog
-      break
-    fi
-  done
-}
-
-find_executable() {
-  local dir=$1
-  shift
-  for prog in "$@"; do
-    if [ -x $dir/$prog ]; then
-      echo -n $dir/$prog
+  for app in "$@"; do
+    if [ -f $dir/$app ]; then
+      echo -n $dir/$app
       break
     fi
   done
@@ -57,15 +47,35 @@ find_executable() {
 
 configure_ssh()
 {
-  sysrepocfg --datastore=startup --format=xml ietf-system --import=$SSH_CONFIG/load_auth_pubkey.xml
+  ssh_pubkey=$(find_file $SSH_CONFIG id_ecdsa.pub id_dsa.pub id_rsa.pub)
+  test -n "$ssh_pubkey"
+  name=${ssh_pubkey##*/}
+  name=${name%%.pub}
+  set -- $(cat $ssh_pubkey)
+  xmlstarlet ed --pf --omit-decl \
+      --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:name' --value "$name" \
+      --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:algorithm' --value "$1" \
+      --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:key-data' --value "$2" \
+      $TEMPLATES/load_auth_pubkey.xml | \
+  sysrepocfg --datastore=startup --format=xml ietf-system --import=-
 }
 
 configure_tls()
 {
   cp $TLS_CONFIG/server_key.pem $KEY_PATH
-  cp $TLS_CONFIG/server_key.pem.pub $KEY_PATH
-  sysrepocfg --datastore=startup --format=xml ietf-keystore --merge=$TLS_CONFIG/load_server_certs.xml
-  sysrepocfg --datastore=startup --format=xml ietf-netconf-server --merge=$TLS_CONFIG/tls_listen.xml
+  ca_cert=$(grep -Fv -- ----- $TLS_CONFIG/ca.pem)
+  server_cert=$(grep -Fv -- ----- $TLS_CONFIG/server_cert.pem)
+  xmlstarlet ed --pf --omit-decl \
+      --update '//_:name[text()="server_cert"]/following-sibling::_:certificate' --value "$server_cert" \
+      --update '//_:name[text()="ca"]/following-sibling::_:certificate' --value "$ca_cert" \
+      $TEMPLATES/load_server_certs.xml | \
+  sysrepocfg --datastore=startup --format=xml ietf-keystore --merge=-
+
+  ca_fingerprint=$(openssl x509 -noout -fingerprint -in $TLS_CONFIG/ca.pem | cut -d= -f2)
+  xmlstarlet ed --pf --omit-decl \
+      --update '//_:name[text()="netconf"]/preceding-sibling::_:fingerprint' --value "02:$ca_fingerprint" \
+      $TEMPLATES/tls_listen.xml | \
+  sysrepocfg --datastore=startup --format=xml ietf-netconf-server --merge=-
 }
 
 configure_modules()
@@ -74,9 +84,9 @@ configure_modules()
     if [ -d $dir ]; then
       model=${dir##*/}
       install_and_configure_yang_model $dir $model
-      prog=$(find_executable $dir subscriber.py)
-      if [ -n "$prog" ]; then
-        configure_subscriber_execution $dir $model $prog
+      app="$dir/subscriber.py"
+      if [ -x "$app" ]; then
+        configure_subscriber_execution $dir $model $app
       fi
     fi
   done
@@ -99,19 +109,19 @@ configure_subscriber_execution()
 {
   local dir=$1
   local model=$2
-  local prog=$3
+  local app=$3
 
-  PROG_PATH=$PATH
+  APP_PATH=$PATH
   if [ -r "$dir/requirements.txt" ]; then
     env_dir=$(create_python_venv $dir)
-    PROG_PATH=$env_dir/bin:$PROG_PATH
+    APP_PATH=$env_dir/bin:$APP_PATH
   fi
   cat > /etc/supervisord.d/$model.conf <<EOF
-[program:subs-$model]
-command=$prog $model
+[appram:subs-$model]
+command=$app $model
 redirect_stderr=true
 autorestart=true
-environment=PATH=$PROG_PATH,PYTHONUNBUFFERED="1"
+environment=PATH=$APP_PATH,PYTHONUNBUFFERED="1"
 EOF
 }
 
@@ -124,6 +134,7 @@ create_python_venv()
   (
     python3 -m venv --system-site-packages $env_dir
     cd $env_dir
+    # shellcheck disable=SC1091
     . ./bin/activate
     pip install --upgrade pip
     pip install -r "$dir"/requirements.txt

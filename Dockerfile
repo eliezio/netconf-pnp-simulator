@@ -141,8 +141,10 @@ RUN set -eux \
       && apk add \
          libcurl \
          libev \
+         openssl \
          pcre \
          protobuf-c \
+         xmlstarlet \
       # v0.9.3 has somes bugs as warned in libnetconf2/CMakeLists.txt:237
       && apk add --repository http://dl-cdn.alpinelinux.org/alpine/v3.10/main libssh==0.8.8-r0 \
       && rm -rf /var/cache/apk/*
@@ -154,6 +156,7 @@ ENV PYTHONPATH=/opt/lib/python3.7/site-packages
 
 COPY config/ /config
 VOLUME /config
+COPY templates/ /templates
 
 # finish setup and add netconf user
 RUN adduser --system --disabled-password --gecos 'Netconf User' netconf
