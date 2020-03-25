@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  DOCKER_BUILDKIT: 1
+  CONTAINER_PUSH_REGISTRY: quay.io
+  LOCAL_IMAGE_TAG: netconf-pnp-simulator:latest
+  REMOTE_IMAGE_TAG: quay.io/blue-onap/netconf-pnp-simulator:latest
+  TRIVY_VERSION: 0.5.3
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build the Docker Image
+      run: docker build -t $LOCAL_IMAGE_TAG --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $REMOTE_IMAGE_TAG --progress plain .
+
+    - name: Export Docker Image
+      run: mkdir -p image && docker save -o image/image.tar $LOCAL_IMAGE_TAG
+
+    - name: cache docker image
+      uses: actions/cache@v1
+      with:
+        path: image/
+        key: ${{ runner.os }}-docker-${{ github.sha }}
+
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: docker-build
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install tox
+      run: |
+        echo "::add-path::$HOME/.local/bin"
+        pip install --user tox
+
+    - name: cache docker image
+      uses: actions/cache@v1
+      with:
+        path: image/
+        key: ${{ runner.os }}-docker-${{ github.sha }}
+
+    - name: Import Docker Image
+      run: docker load -i image/image.tar
+
+    - name: Cache tox
+      uses: actions/cache@v1
+      with:
+        path: .tox/
+        key: ${{ runner.os }}-tox
+
+    - name: Run tests
+      run: tox
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: docker-build
+    steps:
+    - uses: actions/checkout@v2
+    - name: cached scan db
+      uses: actions/cache@v1
+      with:
+        path: vulndb/
+        key: trivy-vulndb
+
+    - name: Install Trivy
+      run: |
+          wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
+          tar xzf trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
+
+    - name: cache docker image
+      uses: actions/cache@v1
+      with:
+        path: image/
+        key: ${{ runner.os }}-docker-${{ github.sha }}
+
+    - name: Import Docker Image
+      run: docker load -i image/image.tar
+
+    - name: Security Scan Docker Image
+      run: ./trivy --exit-code 1 --no-progress --cache-dir vulndb/ $LOCAL_IMAGE_TAG
+
+  publish-image:
+    runs-on: ubuntu-latest
+    needs: [integration-test, security-scan]
+    steps:
+    - name: Login to Quay.io Docker Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.CONTAINER_PUSH_REGISTRY }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: cache docker image
+      uses: actions/cache@v1
+      with:
+        path: image/
+        key: ${{ runner.os }}-docker-${{ github.sha }}
+
+    - name: Import Docker Image
+      run: docker load -i image/image.tar
+
+    - name: Push to Quay.io Docker Registry
+      run: |
+        docker tag $LOCAL_IMAGE_TAG $REMOTE_IMAGE_TAG
+        docker push $REMOTE_IMAGE_TAG
