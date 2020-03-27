@@ -117,7 +117,7 @@ configure_subscriber_execution()
     APP_PATH=$env_dir/bin:$APP_PATH
   fi
   cat > /etc/supervisord.d/$model.conf <<EOF
-[appram:subs-$model]
+[program:subs-$model]
 command=$app $model
 redirect_stderr=true
 autorestart=true

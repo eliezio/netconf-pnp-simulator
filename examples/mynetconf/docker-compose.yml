@@ -2,7 +2,7 @@ version: '3'
 
 services:
   netopeer2:
-    image: quay.io/blue-onap/netconf-pnp-simulator:v2.7.0
+    image: quay.io/blue-onap/netconf-pnp-simulator:v2.7.1
     container_name: mynetconf
     restart: always
     ports:
