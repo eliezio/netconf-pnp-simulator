@@ -2,7 +2,7 @@ version: '3'
 
 services:
   netopeer2:
-    image: quay.io/blue-onap/netconf-pnp-simulator:v2.7.1
+    image: quay.io/blue-onap/netconf-pnp-simulator:v2.7.2
     container_name: mynetconf
     restart: always
     ports:
@@ -10,3 +10,5 @@ services:
       - "6513:6513"
     volumes:
       - ./:/config/modules/mynetconf
+    environment:
+      - SHELL_XTRACE=false

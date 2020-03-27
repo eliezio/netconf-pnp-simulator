@@ -20,9 +20,9 @@
 # ============LICENSE_END=========================================================
 
 set -o errexit
-set -o nounset
 set -o pipefail
-set -o xtrace
+set -o nounset
+[ "${SHELL_XTRACE:-false}" = "true" ] && set -o xtrace
 
 export PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin
 
@@ -119,6 +119,8 @@ configure_subscriber_execution()
   cat > /etc/supervisord.d/$model.conf <<EOF
 [program:subs-$model]
 command=$app $model
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
 redirect_stderr=true
 autorestart=true
 environment=PATH=$APP_PATH,PYTHONUNBUFFERED="1"
@@ -136,8 +138,8 @@ create_python_venv()
     cd $env_dir
     # shellcheck disable=SC1091
     . ./bin/activate
-    pip install --upgrade pip
-    pip install -r "$dir"/requirements.txt
+    pip install --no-cache-dir --upgrade pip
+    pip install --no-cache-dir --requirement "$dir"/requirements.txt
   ) 1>&2
   echo $env_dir
 }
