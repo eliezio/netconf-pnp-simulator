@@ -16,7 +16,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # ============LICENSE_END=========================================================
 
-FROM python:3.7.6-alpine3.11 as build
+FROM python:3.7.7-alpine3.11 as build
 
 ARG zlog_version=1.2.14
 ARG libyang_version=v1.0-r5
@@ -140,7 +140,7 @@ RUN set -eux \
       && make -j2 \
       && make install
 
-FROM python:3.7.6-alpine3.11
+FROM python:3.7.7-alpine3.11
 LABEL authors="eliezio.oliveira@est.tech"
 
 RUN set -eux \
