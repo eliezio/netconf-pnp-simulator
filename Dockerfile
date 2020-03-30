@@ -144,7 +144,7 @@ FROM python:3.7.7-alpine3.11
 LABEL authors="eliezio.oliveira@est.tech"
 
 RUN set -eux \
-      && pip install supervisor loguru \
+      && pip install loguru supervisor virtualenv \
       && apk update \
       && apk upgrade -a \
       && apk add \
@@ -176,8 +176,6 @@ COPY templates/ /templates
 # finish setup and add netconf user
 RUN adduser --system --disabled-password --gecos 'Netconf User' netconf
 
-ENV HOME=/home/netconf
-VOLUME $HOME/.local/share/virtualenvs
 # This is NOT a robust health check but it does help tox-docker to detect when
 # it can start the tests.
 HEALTHCHECK --interval=1s --start-period=2s --retries=10 CMD test -f /run/netopeer2-server.pid

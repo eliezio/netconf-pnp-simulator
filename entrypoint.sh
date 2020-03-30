@@ -134,12 +134,11 @@ create_python_venv()
   mkdir -p $BASE_VIRTUALENVS
   env_dir=$BASE_VIRTUALENVS/$model
   (
-    python3 -m venv --system-site-packages $env_dir
+    virtualenv --system-site-packages $env_dir
     cd $env_dir
     # shellcheck disable=SC1091
     . ./bin/activate
-    pip install --no-cache-dir --upgrade pip
-    pip install --no-cache-dir --requirement "$dir"/requirements.txt
+    pip install --requirement "$dir"/requirements.txt
   ) 1>&2
   echo $env_dir
 }
