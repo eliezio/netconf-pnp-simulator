@@ -1,5 +1,7 @@
 = NETCONF Plug-and-Play Simulator
 
+:sectnums:
+
 :py-requirements: https://pip.pypa.io/en/stable/reference/pip_install/#requirements-file-format
 :yang-rfc: https://tools.ietf.org/html/rfc6020
 
@@ -39,7 +41,6 @@ specified in the {py-requirements}[Requirements File Format]. Example:
 .requirements.txt
 ----
 jmespath ~= 0.9
-loguru ~= 0.4
 lxml ~= 4.4
 requests ~= 2.23
 ----
@@ -61,6 +62,8 @@ The distributed docker image comes with a sample configuration for TLS and SSH, 
 `/config/tls` and `/config/ssh` directories respectively. The user can replace one or both configurations
 by mounting a custom directory under the respective TLS or SSH mounting point.
 
+==== TLS Configuration
+
 You need to provide the following PEM files under `/config/tls`:
 
 [options="header",cols="1m,5"]
@@ -72,11 +75,20 @@ You need to provide the following PEM files under `/config/tls`:
 | `ca.pem` | The Certificate Authority (CA) certificate.
 |===
 
-For the SSH connection, you need to provide the public SSH key in one of these 3 files under `/config/ssh`:
+TIP: You can reload the configuration at runtime
+by running `docker exec <__CONTAINER NAME or ID__> /opt/bin/configure-tls.sh`
 
-- `id_ecdsa.pub`
-- `id_dsa.pub`
+==== SSH Configuration
+
+For the SSH connection, you need to provide the public SSH key in one of these 3 files under `/config/ssh`
+in order of preference:
+
+- `id_ecdsa.pub`; or
+- `id_dsa.pub`; or
 - `id_rsa.pub`
+
+TIP: You can reload the configuration at runtime
+by running `docker exec <__CONTAINER NAME or ID__> /opt/bin/configure-ssh.sh`
 
 === Python Virtual Environment Support
 

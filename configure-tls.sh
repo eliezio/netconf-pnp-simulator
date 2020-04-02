@@ -24,8 +24,20 @@ set -eu
 HERE=${0%/*}
 source $HERE/common.sh
 
-$HERE/configure-ssh.sh
-$HERE/configure-tls.sh
-$HERE/configure-modules.sh
+TLS_CONFIG=$CONFIG/tls
+KEY_PATH=/opt/etc/keystored/keys
 
-exec /usr/local/bin/supervisord -c /etc/supervisord.conf
+cp $TLS_CONFIG/server_key.pem $KEY_PATH
+ca_cert=$(grep -Fv -- ----- $TLS_CONFIG/ca.pem)
+server_cert=$(grep -Fv -- ----- $TLS_CONFIG/server_cert.pem)
+xmlstarlet ed --pf --omit-decl \
+    --update '//_:name[text()="server_cert"]/following-sibling::_:certificate' --value "$server_cert" \
+    --update '//_:name[text()="ca"]/following-sibling::_:certificate' --value "$ca_cert" \
+    $TEMPLATES/load_server_certs.xml | \
+sysrepocfg --datastore=startup --format=xml ietf-keystore --merge=-
+
+ca_fingerprint=$(openssl x509 -noout -fingerprint -in $TLS_CONFIG/ca.pem | cut -d= -f2)
+xmlstarlet ed --pf --omit-decl \
+    --update '//_:name[text()="netconf"]/preceding-sibling::_:fingerprint' --value "02:$ca_fingerprint" \
+    $TEMPLATES/tls_listen.xml | \
+sysrepocfg --datastore=startup --format=xml ietf-netconf-server --merge=-

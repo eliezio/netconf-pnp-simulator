@@ -24,8 +24,16 @@ set -eu
 HERE=${0%/*}
 source $HERE/common.sh
 
-$HERE/configure-ssh.sh
-$HERE/configure-tls.sh
-$HERE/configure-modules.sh
+SSH_CONFIG=$CONFIG/ssh
 
-exec /usr/local/bin/supervisord -c /etc/supervisord.conf
+ssh_pubkey=$(find_file $SSH_CONFIG id_ecdsa.pub id_dsa.pub id_rsa.pub)
+test -n "$ssh_pubkey"
+name=${ssh_pubkey##*/}
+name=${name%%.pub}
+set -- $(cat $ssh_pubkey)
+xmlstarlet ed --pf --omit-decl \
+    --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:name' --value "$name" \
+    --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:algorithm' --value "$1" \
+    --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:key-data' --value "$2" \
+    $TEMPLATES/load_auth_pubkey.xml | \
+sysrepocfg --datastore=startup --format=xml ietf-system --import=-

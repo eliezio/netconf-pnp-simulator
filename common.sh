@@ -19,13 +19,23 @@
 # SPDX-License-Identifier: Apache-2.0
 # ============LICENSE_END=========================================================
 
-set -eu
+set -o errexit
+set -o pipefail
+set -o nounset
+[ "${SHELL_XTRACE:-false}" = "true" ] && set -o xtrace
 
-HERE=${0%/*}
-source $HERE/common.sh
+export PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin
 
-$HERE/configure-ssh.sh
-$HERE/configure-tls.sh
-$HERE/configure-modules.sh
+CONFIG=/config
+TEMPLATES=/templates
 
-exec /usr/local/bin/supervisord -c /etc/supervisord.conf
+find_file() {
+  local dir=$1
+  shift
+  for app in "$@"; do
+    if [ -f $dir/$app ]; then
+      echo -n $dir/$app
+      break
+    fi
+  done
+}
