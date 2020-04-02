@@ -39,3 +39,7 @@ find_file() {
     fi
   done
 }
+
+
+# Extracts the body of a PEM file by removing the dashed header and footer
+alias pem_body='grep -Fv -- -----'

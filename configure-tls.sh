@@ -28,8 +28,8 @@ TLS_CONFIG=$CONFIG/tls
 KEY_PATH=/opt/etc/keystored/keys
 
 cp $TLS_CONFIG/server_key.pem $KEY_PATH
-ca_cert=$(grep -Fv -- ----- $TLS_CONFIG/ca.pem)
-server_cert=$(grep -Fv -- ----- $TLS_CONFIG/server_cert.pem)
+ca_cert=$(pem_body $TLS_CONFIG/ca.pem)
+server_cert=$(pem_body $TLS_CONFIG/server_cert.pem)
 xmlstarlet ed --pf --omit-decl \
     --update '//_:name[text()="server_cert"]/following-sibling::_:certificate' --value "$server_cert" \
     --update '//_:name[text()="ca"]/following-sibling::_:certificate' --value "$ca_cert" \
