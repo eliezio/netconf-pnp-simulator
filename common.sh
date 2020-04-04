@@ -29,6 +29,21 @@ export PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin
 CONFIG=/config
 TEMPLATES=/templates
 
+PROC_NAME=${0##*/}
+PROC_NAME=${PROC_NAME%.sh}
+
+function now_ms() {
+    # Requires coreutils package
+    date +"%Y-%m-%d %H:%M:%S.%3N"
+}
+
+function log() {
+    local level=$1
+    shift
+    local message="$*"
+    >&2 printf "%s %-5s [%s] %s\n" "$(now_ms)" $level $PROC_NAME "$message"
+}
+
 find_file() {
   local dir=$1
   shift
@@ -42,4 +57,6 @@ find_file() {
 
 
 # Extracts the body of a PEM file by removing the dashed header and footer
-alias pem_body='grep -Fv -- -----'
+pem_body() {
+    grep -Fv -- ----- "$1"
+}

@@ -27,9 +27,11 @@ source $HERE/common.sh
 TLS_CONFIG=$CONFIG/tls
 KEY_PATH=/opt/etc/keystored/keys
 
+log INFO Update server private key
 cp $TLS_CONFIG/server_key.pem $KEY_PATH
 ca_cert=$(pem_body $TLS_CONFIG/ca.pem)
 server_cert=$(pem_body $TLS_CONFIG/server_cert.pem)
+log INFO Load CA and server certificates
 xmlstarlet ed --pf --omit-decl \
     --update '//_:name[text()="server_cert"]/following-sibling::_:certificate' --value "$server_cert" \
     --update '//_:name[text()="ca"]/following-sibling::_:certificate' --value "$ca_cert" \
@@ -37,6 +39,7 @@ xmlstarlet ed --pf --omit-decl \
 sysrepocfg --datastore=startup --format=xml ietf-keystore --merge=-
 
 ca_fingerprint=$(openssl x509 -noout -fingerprint -in $TLS_CONFIG/ca.pem | cut -d= -f2)
+log INFO Configure TLS ingress service
 xmlstarlet ed --pf --omit-decl \
     --update '//_:name[text()="netconf"]/preceding-sibling::_:fingerprint' --value "02:$ca_fingerprint" \
     $TEMPLATES/tls_listen.xml | \

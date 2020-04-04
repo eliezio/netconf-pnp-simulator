@@ -32,10 +32,12 @@ install_and_configure_yang_model()
     local dir=$1
     local model=$2
 
+    log INFO Importing Yang model \"$model\"
     yang=$(find_file $dir $model.yang model.yang)
     sysrepoctl --install --yang=$yang
     data=$(find_file $dir startup.json startup.xml data.json data.xml)
     if [ -n "$data" ]; then
+      log INFO Initialing Yang model \"$model\"
       sysrepocfg --datastore=startup --import=$data $model
     fi
 }
@@ -48,9 +50,10 @@ configure_subscriber_execution()
 
   APP_PATH=$PATH
   if [ -r "$dir/requirements.txt" ]; then
-    env_dir=$(create_python_venv $dir)
+    env_dir=$(create_python_venv $dir $model)
     APP_PATH=$env_dir/bin:$APP_PATH
   fi
+  log INFO Preparing launching of module \"$model\" application
   cat > /etc/supervisord.d/$model.conf <<EOF
 [program:subs-$model]
 command=$app $model
@@ -65,7 +68,9 @@ EOF
 create_python_venv()
 {
   local dir=$1
+  local model=$2
 
+  log INFO Creating virtual environment for module $model
   mkdir -p $BASE_VIRTUALENVS
   env_dir=$BASE_VIRTUALENVS/$model
   (

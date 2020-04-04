@@ -31,6 +31,7 @@ test -n "$ssh_pubkey"
 name=${ssh_pubkey##*/}
 name=${name%%.pub}
 set -- $(cat $ssh_pubkey)
+log INFO Configure SSH ingress service
 xmlstarlet ed --pf --omit-decl \
     --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:name' --value "$name" \
     --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:algorithm' --value "$1" \

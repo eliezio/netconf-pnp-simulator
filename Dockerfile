@@ -148,6 +148,7 @@ RUN set -eux \
       && apk update \
       && apk upgrade -a \
       && apk add \
+         coreutils \
          libcurl \
          libev \
          openssl \
