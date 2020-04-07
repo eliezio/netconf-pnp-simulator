@@ -87,7 +87,7 @@ You need to provide the following PEM files under ``/config/tls``:
    * - ``ca.pem``
      - The Certificate Authority (CA) certificate.
 
-.. TIP:: You can reload the configuration at runtime by running ``docker exec <CONTAINER NAME or ID> /opt/bin/configure-tls.sh``
+.. TIP:: You can reload the configuration at runtime by running ``docker exec <CONTAINER NAME or ID> /opt/bin/reconfigure-tls.sh``
 
 SSH Configuration
 ^^^^^^^^^^^^^^^^^
@@ -99,7 +99,7 @@ in order of preference:
 - ``id_dsa.pub``; or
 - ``id_rsa.pub``
 
-.. TIP:: You can reload the configuration at runtime by running ``docker exec <CONTAINER NAME or ID> /opt/bin/configure-ssh.sh``
+.. TIP:: You can reload the configuration at runtime by running ``docker exec <CONTAINER NAME or ID> /opt/bin/reconfigure-ssh.sh``
 
 Python Virtual Environment Support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -192,6 +192,6 @@ COPY zlog.conf /opt/etc/
 ENV LOGURU_FORMAT="<green>{time:YYYY-DD-MM HH:mm:ss.SSS}</green> {level: <5} [mynetconf] <lvl>{message}</lvl>"
 ENV LOGURU_COLORIZE=True
 
-COPY entrypoint.sh common.sh configure-*.sh /opt/bin/
+COPY entrypoint.sh common.sh configure-*.sh reconfigure-*.sh /opt/bin/
 
 CMD /opt/bin/entrypoint.sh

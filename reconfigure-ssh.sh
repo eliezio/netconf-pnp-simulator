@@ -26,15 +26,12 @@ source $HERE/common.sh
 
 SSH_CONFIG=$CONFIG/ssh
 
-ssh_pubkey=$(find_file $SSH_CONFIG id_ecdsa.pub id_dsa.pub id_rsa.pub)
-test -n "$ssh_pubkey"
-name=${ssh_pubkey##*/}
-name=${name%%.pub}
-set -- $(cat $ssh_pubkey)
-log INFO Configure SSH ingress service
-xmlstarlet ed --pf --omit-decl \
-    --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:name' --value "$name" \
-    --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:algorithm' --value "$1" \
-    --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:key-data' --value "$2" \
-    $TEMPLATES/load_auth_pubkey.xml | \
-sysrepocfg --datastore=startup --format=xml ietf-system --import=-
+WORKDIR=$(mktemp -d)
+trap "rm -rf $WORKDIR" EXIT
+
+sysrepocfg --format=xml --export=$WORKDIR/load_auth_pubkey.xml ietf-system
+configure_ssh running import $WORKDIR
+
+pid=$(cat /var/run/netopeer2-server.pid)
+log INFO Restart Netopeer2 pid=$pid
+kill $pid

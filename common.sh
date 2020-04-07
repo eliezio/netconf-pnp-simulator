@@ -60,3 +60,62 @@ find_file() {
 pem_body() {
     grep -Fv -- ----- "$1"
 }
+
+
+# ------------------------------------
+# SSH Common Definitions and Functions
+# ------------------------------------
+
+SSH_CONFIG=$CONFIG/ssh
+
+configure_ssh() {
+    local datastore=$1
+    local operation=$2
+    local dir=$3
+
+    log INFO Configure SSH ingress service
+    ssh_pubkey=$(find_file $SSH_CONFIG id_ecdsa.pub id_dsa.pub id_rsa.pub)
+    test -n "$ssh_pubkey"
+    name=${ssh_pubkey##*/}
+    name=${name%%.pub}
+    set -- $(cat $ssh_pubkey)
+    xmlstarlet ed --pf --omit-decl \
+        --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:name' --value "$name" \
+        --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:algorithm' --value "$1" \
+        --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:key-data' --value "$2" \
+        $dir/load_auth_pubkey.xml | \
+    sysrepocfg --datastore=$datastore --permanent --format=xml ietf-system --${operation}=-
+}
+
+
+# ------------------------------------
+# SSL Common Definitions and Functions
+# ------------------------------------
+
+TLS_CONFIG=$CONFIG/tls
+KEY_PATH=/opt/etc/keystored/keys
+
+configure_tls() {
+    local datastore=$1
+    local operation=$2
+    local dir=$3
+
+    log INFO Update server private key
+    cp $TLS_CONFIG/server_key.pem $KEY_PATH
+
+    log INFO Load CA and server certificates
+    ca_cert=$(pem_body $TLS_CONFIG/ca.pem)
+    server_cert=$(pem_body $TLS_CONFIG/server_cert.pem)
+    xmlstarlet ed --pf --omit-decl \
+        --update '//_:name[text()="server_cert"]/following-sibling::_:certificate' --value "$server_cert" \
+        --update '//_:name[text()="ca"]/following-sibling::_:certificate' --value "$ca_cert" \
+        $dir/load_server_certs.xml | \
+    sysrepocfg --datastore=$datastore --permanent --format=xml ietf-keystore --${operation}=-
+
+    log INFO Configure TLS ingress service
+    ca_fingerprint=$(openssl x509 -noout -fingerprint -in $TLS_CONFIG/ca.pem | cut -d= -f2)
+    xmlstarlet ed --pf --omit-decl \
+        --update '//_:name[text()="netconf"]/preceding-sibling::_:fingerprint' --value "02:$ca_fingerprint" \
+        $dir/tls_listen.xml | \
+    sysrepocfg --datastore=$datastore --permanent --format=xml ietf-netconf-server --${operation}=-
+}
