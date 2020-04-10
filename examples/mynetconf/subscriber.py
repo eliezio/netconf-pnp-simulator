@@ -48,10 +48,10 @@ def print_change(op, old_val, new_val):
 
 # Helper function for printing events.
 def ev_to_str(ev):
-    if ev == sr.SR_EV_VERIFY:
-        return "verify"
-    elif ev == sr.SR_EV_APPLY:
-        return "apply"
+    if ev == sr.SR_EV_CHANGE:
+        return "change"
+    elif ev == sr.SR_EV_DONE:
+        return "done"
     elif ev == sr.SR_EV_ABORT:
         return "abort"
     else:
@@ -73,10 +73,10 @@ def print_current_config(session, module_name):
 
 
 # Function to be called for subscribed client of given session whenever configuration changes.
-def module_change_cb(sess, module_name, event, private_ctx):
+def module_change_cb(sess, module_name, xpath, event, request_id, private_ctx):
     try:
         logger.info("========== Notification " + ev_to_str(event) + " =============================================")
-        if event == sr.SR_EV_APPLY:
+        if event == sr.SR_EV_CHANGE:
             print_current_config(sess, module_name)
 
         logger.info("========== CHANGES: =============================================")
@@ -105,7 +105,7 @@ def main():
         logger.info(f"Application will watch for changes in {YANG_MODULE_NAME}")
 
         # connect to sysrepo
-        conn = sr.Connection(YANG_MODULE_NAME)
+        conn = sr.Connection(sr.SR_CONN_DEFAULT)
 
         # start session
         sess = sr.Session(conn)
@@ -113,7 +113,7 @@ def main():
         # subscribe for changes in running config */
         subscribe = sr.Subscribe(sess)
 
-        subscribe.module_change_subscribe(YANG_MODULE_NAME, module_change_cb)
+        subscribe.module_change_subscribe(YANG_MODULE_NAME, module_change_cb, None)
 
         try:
             print_current_config(sess, YANG_MODULE_NAME)
@@ -123,6 +123,8 @@ def main():
         logger.info("========== STARTUP CONFIG APPLIED AS RUNNING ==========")
 
         sr.global_loop()
+        subscribe.unsubscribe()
+        sess.session_stop()
 
         logger.info("Application exit requested, exiting.")
 

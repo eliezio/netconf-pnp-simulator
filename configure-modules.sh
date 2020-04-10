@@ -34,11 +34,12 @@ install_and_configure_yang_model()
 
     log INFO Importing Yang model \"$model\"
     yang=$(find_file $dir $model.yang model.yang)
-    sysrepoctl --install --yang=$yang
+    sysrepoctl -v4 --apply --install $yang
     data=$(find_file $dir startup.json startup.xml data.json data.xml)
     if [ -n "$data" ]; then
       log INFO Initialing Yang model \"$model\"
-      sysrepocfg --datastore=startup --import=$data $model
+      sysrepocfg -v4 --datastore=startup --module=$model --edit=$data
+      sysrepocfg -v4 --copy-from=startup --module=$model
     fi
 }
 

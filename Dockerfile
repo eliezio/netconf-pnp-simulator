@@ -20,10 +20,10 @@
 FROM python:3.7.7-alpine3.11 as build
 
 ARG zlog_version=1.2.14
-ARG libyang_version=v1.0-r5
-ARG sysrepo_version=v0.7.9
-ARG libnetconf2_version=v0.12-r2
-ARG netopeer2_version=v0.7-r2
+ARG libyang_version=v1.0.130
+ARG sysrepo_version=v1.4.2
+ARG libnetconf2_version=v1.1.7
+ARG netopeer2_version=v1.1.7
 
 WORKDIR /usr/src
 
@@ -93,14 +93,17 @@ RUN set -eux \
       && for p in ../patches/sysrepo/*.patch; do patch -p1 -i $p; done \
       && mkdir build && cd build \
       && cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_TESTS=OFF \
-         -DREPOSITORY_LOC:PATH=/opt/etc/sysrepo \
+         -DREPO_PATH:PATH=/opt/etc/sysrepo \
          -DCMAKE_INSTALL_PREFIX:PATH=/opt \
-         -DGEN_PYTHON_VERSION=3 \
+         -DGEN_LANGUAGE_BINDINGS=ON \
          -DPYTHON_MODULE_PATH:PATH=/opt/lib/python3.7/site-packages \
          -DBUILD_EXAMPLES=0 \
          .. \
       && make -j2 \
       && make install
+
+# libssh 0.9.4: header still says PATCH/MICRO is 3
+RUN sed -i.bak 's/#define LIBSSH_VERSION_MICRO  3/#define LIBSSH_VERSION_MICRO  4/' /usr/include/libssh/libssh.h
 
 # libnetconf2
 COPY patches/libnetconf2/ ./patches/libnetconf2/
@@ -117,22 +120,9 @@ RUN set -eux \
       && make \
       && make install
 
-# keystore
-COPY patches/Netopeer2/ ./patches/Netopeer2/
-RUN set -eux \
-      && git clone --branch $netopeer2_version --depth 1 https://github.com/CESNET/Netopeer2.git \
-      && cd Netopeer2 \
-      && for p in ../patches/Netopeer2/*.patch; do patch -p1 -i $p; done \
-      && cd keystored \
-      && mkdir build && cd build \
-      && cmake -DCMAKE_BUILD_TYPE:String="Release" \
-         -DCMAKE_INSTALL_PREFIX:PATH=/opt \
-         .. \
-      && make -j2 \
-      && make install
-
 # netopeer2
 RUN set -eux \
+      && git clone --branch $netopeer2_version --depth 1 https://github.com/CESNET/Netopeer2.git \
       && cd Netopeer2/server \
       && mkdir build && cd build \
       && cmake -DCMAKE_BUILD_TYPE:String="Release" \
@@ -175,7 +165,12 @@ VOLUME /config
 COPY templates/ /templates
 
 # finish setup and add netconf user
-RUN adduser --system --disabled-password --gecos 'Netconf User' netconf
+RUN set -eux \
+      && adduser --system --disabled-password --gecos 'Netconf User' netconf \
+      && umask 077 \
+      && mkdir ~netconf/.ssh \
+      && touch ~netconf/.ssh/authorized_keys \
+      && chown -R netconf ~netconf/.ssh
 
 # This is NOT a robust health check but it does help tox-docker to detect when
 # it can start the tests.

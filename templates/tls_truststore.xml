@@ -1,0 +1,9 @@
+<truststore xmlns="urn:ietf:params:xml:ns:yang:ietf-truststore">
+    <certificates>
+        <name>cacerts</name>
+        <certificate>
+            <name>cacert</name>
+            <cert></cert>
+        </certificate>
+    </certificates>
+</truststore>

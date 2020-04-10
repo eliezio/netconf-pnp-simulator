@@ -25,8 +25,8 @@ set -eu
 HERE=${0%/*}
 source $HERE/common.sh
 
-configure_ssh startup merge $TEMPLATES
-configure_tls startup merge $TEMPLATES
+configure_ssh startup edit $TEMPLATES
+configure_tls startup edit $TEMPLATES
 
 $HERE/configure-modules.sh
 

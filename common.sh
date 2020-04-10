@@ -62,7 +62,6 @@ find_file() {
 # Extracts the body of a PEM file by removing the dashed header and footer
 alias pem_body='grep -Fv -- -----'
 
-
 kill_service() {
     local service=$1
 
@@ -85,15 +84,10 @@ configure_ssh() {
     log INFO Configure SSH ingress service
     ssh_pubkey=$(find_file $SSH_CONFIG id_ecdsa.pub id_dsa.pub id_rsa.pub)
     test -n "$ssh_pubkey"
-    name=${ssh_pubkey##*/}
-    name=${name%%.pub}
-    set -- $(cat $ssh_pubkey)
-    xmlstarlet ed --pf --omit-decl \
-        --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:name' --value "$name" \
-        --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:algorithm' --value "$1" \
-        --update '//_:name[text()="netconf"]/following-sibling::_:authorized-key/_:key-data' --value "$2" \
-        $dir/load_auth_pubkey.xml | \
-    sysrepocfg --datastore=$datastore --permanent --format=xml ietf-system --${operation}=-
+    cat $ssh_pubkey > ~netconf/.ssh/authorized_keys
+    # --permanent ?
+    sysrepocfg -v4 --datastore=$datastore --module=ietf-netconf-server --${operation}=$TEMPLATES/ssh_listen.xml
+    sysrepocfg -v4 --copy-from=$datastore --module=ietf-netconf-server
 }
 
 
@@ -102,29 +96,38 @@ configure_ssh() {
 # ------------------------------------
 
 TLS_CONFIG=$CONFIG/tls
-KEY_PATH=/opt/etc/keystored/keys
 
 configure_tls() {
     local datastore=$1
     local operation=$2
     local dir=$3
 
-    log INFO Update server private key
-    cp $TLS_CONFIG/server_key.pem $KEY_PATH
-
     log INFO Load CA and server certificates
     ca_cert=$(pem_body $TLS_CONFIG/ca.pem)
-    server_cert=$(pem_body $TLS_CONFIG/server_cert.pem)
+    out=$(mktemp -p $WORKDIR tls_truststore.XXXXXX.xml)
     xmlstarlet ed --pf --omit-decl \
-        --update '//_:name[text()="server_cert"]/following-sibling::_:certificate' --value "$server_cert" \
-        --update '//_:name[text()="ca"]/following-sibling::_:certificate' --value "$ca_cert" \
-        $dir/load_server_certs.xml | \
-    sysrepocfg --datastore=$datastore --permanent --format=xml ietf-keystore --${operation}=-
+        --update '//_:name[text()="cacert"]/following-sibling::_:cert' --value "$ca_cert" \
+        $dir/tls_truststore.xml > $out
+    # --permanent ?
+    sysrepocfg --datastore=startup --module=ietf-truststore --edit=$out
 
-    log INFO Configure TLS ingress service
+    server_cert=$(pem_body $TLS_CONFIG/server_cert.pem)
+    server_pubkey=$(openssl x509 -noout -pubkey -in $TLS_CONFIG/server_cert.pem | pem_body)
+    server_privkey=$(pem_body $TLS_CONFIG/server_key.pem)
+    out=$(mktemp -p $WORKDIR tls_keystore.XXXXXX.xml)
+    xmlstarlet ed --pf --omit-decl \
+        --update '//_:private-key' --value "$server_privkey" \
+        --update '//_:public-key' --value "$server_pubkey" \
+        --update '//_:cert' --value "$server_cert" \
+        $dir/tls_keystore.xml > $out
+    # --permanent ?
+    sysrepocfg --datastore=${datastore} --module=ietf-keystore --${operation}=$out
+
     ca_fingerprint=$(openssl x509 -noout -fingerprint -in $TLS_CONFIG/ca.pem | cut -d= -f2)
+    out=$(mktemp -p $WORKDIR tls_listen.XXXXXX.xml)
     xmlstarlet ed --pf --omit-decl \
         --update '//_:name[text()="netconf"]/preceding-sibling::_:fingerprint' --value "02:$ca_fingerprint" \
-        $dir/tls_listen.xml | \
-    sysrepocfg --datastore=$datastore --permanent --format=xml ietf-netconf-server --${operation}=-
+        $dir/tls_listen.xml > $out
+    # --permanent ?
+    sysrepocfg --datastore=$datastore --module=ietf-netconf-server --${operation}=$out
 }

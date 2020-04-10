@@ -1,21 +1,19 @@
-diff --git a/swig/python/CMakeLists.txt b/swig/python/CMakeLists.txt
-index 7d00a8b7..dc06da00 100644
---- a/swig/python/CMakeLists.txt
-+++ b/swig/python/CMakeLists.txt
-@@ -24,10 +24,12 @@ swig_link_libraries(${PYTHON_SWIG_BINDING} ${PYTHON_LIBRARIES} Sysrepo-cpp)
-
- file(COPY "examples" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+--- a/bindings/python/CMakeLists.txt	2020-02-17 21:25:50.880816000 +0000
++++ b/bindings/python/CMakeLists.txt	2020-02-17 21:28:35.116253000 +0000
+@@ -18,10 +18,12 @@
+ endif()
+ swig_link_libraries(${PYTHON_SWIG_BINDING} ${PYTHON_LIBRARIES} sysrepo-cpp)
 
 -execute_process(COMMAND
 -    ${PYTHON_EXECUTABLE} -c
--    "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
+-    "from distutils.sysconfig import get_python_lib; print(get_python_lib(plat_specific=True))"
 -OUTPUT_VARIABLE PYTHON_MODULE_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
 +if(NOT DEFINED PYTHON_MODULE_PATH)
 +    execute_process(COMMAND
 +        ${PYTHON_EXECUTABLE} -c
-+        "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
++        "from distutils.sysconfig import get_python_lib; print(get_python_lib(plat_specific=True))"
 +    OUTPUT_VARIABLE PYTHON_MODULE_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
 +endif()
 
- install( FILES "${CMAKE_CURRENT_BINARY_DIR}/_${PYTHON_SWIG_BINDING}.so" DESTINATION ${PYTHON_MODULE_PATH} )
- install( FILES "${CMAKE_CURRENT_BINARY_DIR}/${PYTHON_SWIG_BINDING}.py" DESTINATION ${PYTHON_MODULE_PATH} )
+ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/_${PYTHON_SWIG_BINDING}.so" DESTINATION ${PYTHON_MODULE_PATH})
+ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PYTHON_SWIG_BINDING}.py" DESTINATION ${PYTHON_MODULE_PATH})
