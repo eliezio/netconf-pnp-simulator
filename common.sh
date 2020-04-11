@@ -32,6 +32,9 @@ TEMPLATES=/templates
 PROC_NAME=${0##*/}
 PROC_NAME=${PROC_NAME%.sh}
 
+WORKDIR=$(mktemp -d)
+trap "rm -rf $WORKDIR" EXIT
+
 function now_ms() {
     # Requires coreutils package
     date +"%Y-%m-%d %H:%M:%S.%3N"
@@ -57,10 +60,16 @@ find_file() {
 
 
 # Extracts the body of a PEM file by removing the dashed header and footer
-pem_body() {
-    grep -Fv -- ----- "$1"
-}
+alias pem_body='grep -Fv -- -----'
 
+
+kill_service() {
+    local service=$1
+
+    pid=$(cat /var/run/${service}.pid)
+    log INFO Killing $service pid=$pid
+    kill $pid
+}
 
 # ------------------------------------
 # SSH Common Definitions and Functions
