@@ -26,7 +26,7 @@ source $HERE/common.sh
 
 SSH_CONFIG=$CONFIG/ssh
 
-sysrepocfg --format=xml --export=$WORKDIR/load_auth_pubkey.xml ietf-system
+sysrepocfg --format=xml --export=$WORKDIR/ietf-system.xml ietf-system
 configure_ssh running import $WORKDIR
 
 kill_service netopeer2-server
