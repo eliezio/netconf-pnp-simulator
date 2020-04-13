@@ -54,6 +54,8 @@ configure_subscriber_execution()
     APP_PATH=$env_dir/bin:$APP_PATH
   fi
   log INFO Preparing launching of module \"$model\" application
+  # shellcheck disable=SC2153
+  loguru_format="${LOGURU_FORMAT//\{module\}/$model}"
   cat > /etc/supervisord.d/$model.conf <<EOF
 [program:subs-$model]
 command=$app $model
@@ -61,7 +63,7 @@ stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 redirect_stderr=true
 autorestart=true
-environment=PATH=$APP_PATH,PYTHONUNBUFFERED="1"
+environment=PATH=$APP_PATH,PYTHONUNBUFFERED="1",LOGURU_FORMAT="$loguru_format"
 EOF
 }
 
