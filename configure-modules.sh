@@ -26,6 +26,7 @@ source $HERE/common.sh
 
 MODELS_CONFIG=$CONFIG/modules
 BASE_VIRTUALENVS=$HOME/.local/share/virtualenvs
+GENERIC_SUBSCRIBER=/opt/bin/generic_subscriber.py
 
 install_and_configure_yang_model()
 {
@@ -91,7 +92,11 @@ for dir in "$MODELS_CONFIG"/*; do
     install_and_configure_yang_model $dir $model
     app="$dir/subscriber.py"
     if [ -x "$app" ]; then
-      configure_subscriber_execution $dir $model $app
+      log INFO Module $model is using its own subscriber
+    else
+      log WARN Module $model is using the generic subscriber
+      app=$GENERIC_SUBSCRIBER
     fi
+    configure_subscriber_execution $dir $model $app
   fi
 done
