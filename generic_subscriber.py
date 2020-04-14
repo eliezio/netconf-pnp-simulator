@@ -26,7 +26,6 @@ __license__ = "Apache 2.0"
 #
 # The original c implementation is also available in the source, so one can refer to it to evaluate trade-offs.
 
-import os
 import sys
 
 import sysrepo as sr
