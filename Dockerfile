@@ -65,8 +65,7 @@ RUN set -eux \
       && mkdir build && cd build \
       && cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_BUILD_TESTS=OFF \
          -DCMAKE_INSTALL_PREFIX:PATH=/opt \
-         -DGEN_LANGUAGE_BINDINGS=ON \
-         -DPYTHON_MODULE_PATH:PATH=/opt/lib/python3.7/site-packages \
+         -DGEN_LANGUAGE_BINDINGS=OFF \
          .. \
       && make -j2 \
       && make install
@@ -98,6 +97,7 @@ RUN set -eux \
          -DGEN_PYTHON_VERSION=3 \
          -DPYTHON_MODULE_PATH:PATH=/opt/lib/python3.7/site-packages \
          -DBUILD_EXAMPLES=0 \
+         -DBUILD_CPP_EXAMPLES=0 \
          .. \
       && make -j2 \
       && make install
@@ -111,8 +111,7 @@ RUN set -eux \
       && mkdir build && cd build \
       && cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_BUILD_TESTS=OFF \
          -DCMAKE_INSTALL_PREFIX:PATH=/opt \
-         -DENABLE_PYTHON=ON \
-         -DPYTHON_MODULE_PATH:PATH=/opt/lib/python3.7/site-packages \
+         -DENABLE_PYTHON=OFF \
          .. \
       && make \
       && make install
