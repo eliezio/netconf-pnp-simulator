@@ -140,14 +140,16 @@ RUN set -eux \
       && make -j2 \
       && make install
 
-FROM python:3.7.7-alpine3.11
+FROM python:3.7.7-alpine3.11 as stage0
+RUN apk upgrade --no-cache --available
+
+FROM scratch
 LABEL authors="eliezio.oliveira@est.tech"
 
+COPY --from=stage0 / /
+
 RUN set -eux \
-      && pip install loguru supervisor virtualenv \
-      && apk update \
-      && apk upgrade -a \
-      && apk add \
+      && apk add --no-cache \
          coreutils \
          libcurl \
          libev \
@@ -155,8 +157,7 @@ RUN set -eux \
          openssl \
          pcre \
          protobuf-c \
-         xmlstarlet \
-      && rm -rf /var/cache/apk/*
+         xmlstarlet
 
 COPY --from=build /opt/ /opt/
 
@@ -166,6 +167,7 @@ ENV PYTHONPATH=/opt/lib/python3.7/site-packages
 COPY patches/supervisor/ /usr/src/patches/supervisor/
 
 RUN set -eux \
+      && pip install loguru supervisor supervisor virtualenv \
       && cd /usr/local/lib/python3.7/site-packages \
       && for p in /usr/src/patches/supervisor/*.patch; do patch -p1 -i $p; done
 
