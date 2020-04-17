@@ -115,11 +115,16 @@ configure_tls() {
     log INFO Load CA and server certificates
     ca_cert=$(pem_body $TLS_CONFIG/ca.pem)
     server_cert=$(pem_body $TLS_CONFIG/server_cert.pem)
+    out=$(mktemp -p $WORKDIR ietf-keystore.XXXXXX.xml)
     xmlstarlet ed --pf --omit-decl \
         --update '//_:name[text()="server_cert"]/following-sibling::_:certificate' --value "$server_cert" \
         --update '//_:name[text()="ca"]/following-sibling::_:certificate' --value "$ca_cert" \
-        $dir/ietf-keystore.xml | \
-    sysrepocfg --datastore=$datastore --permanent --format=xml ietf-keystore --${operation}=-
+        $dir/ietf-keystore.xml > $out
+    sysrepocfg --datastore=$datastore --format=xml ietf-keystore --${operation}=$out
+    # The '--permanent' option was causing sysrepod to crash
+    if [ "$datastore" != "startup" ]; then
+        sysrepocfg --datastore=startup --format=xml ietf-keystore --${operation}=$out
+    fi
 
     log INFO Configure TLS ingress service
     ca_fingerprint=$(openssl x509 -noout -fingerprint -in $TLS_CONFIG/ca.pem | cut -d= -f2)

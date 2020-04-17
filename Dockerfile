@@ -126,6 +126,7 @@ RUN set -eux \
       && mkdir build && cd build \
       && cmake -DCMAKE_BUILD_TYPE:String="Release" \
          -DCMAKE_INSTALL_PREFIX:PATH=/opt \
+         -DMODEL_INSTALL=ON \
          .. \
       && make -j2 \
       && make install
