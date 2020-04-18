@@ -183,7 +183,11 @@ RUN adduser --system --disabled-password --gecos 'Netconf User' netconf
 # it can start the tests.
 HEALTHCHECK --interval=1s --start-period=2s --retries=10 CMD test -f /run/netopeer2-server.pid
 
+# SSH
 EXPOSE 830
+
+# TLS
+EXPOSE 6513
 
 COPY supervisord.conf /etc/supervisord.conf
 RUN mkdir /etc/supervisord.d
