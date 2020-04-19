@@ -77,7 +77,7 @@ wait_for_file() {
     false
 }
 
-kill_service() {
+restart_service() {
     local service=$1
 
     pid_file=/run/${service}.pid

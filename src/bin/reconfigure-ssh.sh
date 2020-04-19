@@ -29,4 +29,4 @@ SSH_CONFIG=$CONFIG/ssh
 sysrepocfg --format=xml --export=$WORKDIR/ietf-system.xml ietf-system
 configure_ssh running import $WORKDIR
 
-kill_service netopeer2-server
+restart_service netopeer2-server

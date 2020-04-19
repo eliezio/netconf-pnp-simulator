@@ -39,7 +39,7 @@ class NCTestCase:
         self.nc = manager.connect(
             host=settings.HOST,
             port=settings.SSH_PORT,
-            username=settings.USERNAME,
+            username=settings.SSH_USERNAME,
             key_filename=settings.SSH_KEY_FILENAME,
             allow_agent=False,
             look_for_keys=False,

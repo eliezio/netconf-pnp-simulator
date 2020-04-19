@@ -28,4 +28,4 @@ sysrepocfg --format=xml --export=$WORKDIR/ietf-keystore.xml ietf-keystore
 sysrepocfg --format=xml --export=$WORKDIR/ietf-netconf-server.xml ietf-netconf-server
 configure_tls running import $WORKDIR
 
-kill_service netopeer2-server
+restart_service netopeer2-server
