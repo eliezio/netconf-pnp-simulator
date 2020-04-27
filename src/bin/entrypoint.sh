@@ -30,4 +30,4 @@ configure_tls startup merge $TEMPLATES
 
 $HERE/configure-modules.sh
 
-exec /usr/local/bin/supervisord -c /etc/supervisord.conf
+exec /usr/local/bin/supervisord -c /opt/etc/supervisord.conf
