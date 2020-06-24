@@ -43,6 +43,7 @@ RUN set -eux \
          openssl-dev \
          pcre-dev \
          pkgconfig \
+         postgresql-dev \
          protobuf-c-dev \
          swig \
          # for troubleshooting
@@ -141,6 +142,8 @@ RUN set -eux \
       && make -j2 \
       && make install
 
+RUN pip install --prefix /opt psycopg2
+
 FROM python:3.7.7-alpine3.11 as stage0
 RUN apk upgrade --no-cache --available
 
@@ -157,6 +160,7 @@ RUN set -eux \
          libssh \
          openssl \
          pcre \
+         postgresql-libs \
          protobuf-c \
          xmlstarlet
 
